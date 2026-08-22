@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Dev-only verification harnesses (not app source).
+    "scripts/**",
   ]),
 ]);
 
