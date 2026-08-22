@@ -37,6 +37,9 @@ export function AppShell({
               <Link href="/budgets">Budgets</Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
+              <Link href="/bills">Bills</Link>
+            </Button>
+            <Button asChild variant="ghost" size="sm">
               <Link href="/household">Household</Link>
             </Button>
           </nav>

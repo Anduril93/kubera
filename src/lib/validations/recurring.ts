@@ -51,3 +51,21 @@ export type RecurringFormState = {
   /** postRecurringRule: true when the rule wasn't due, so nothing was posted. */
   notDue?: boolean;
 };
+
+/**
+ * Client form shape (all strings) for react-hook-form + form.tsx. `category_id`
+ * may be "" / "none". The server actions re-validate authoritatively.
+ */
+export const recurringFormSchema = z.object({
+  name: z.string().trim().min(1, "Enter a name").max(80, "Name is too long"),
+  type: z.enum(RECURRING_TYPES),
+  amount: z.string().trim().min(1, "Enter an amount"),
+  account_id: z.string().uuid("Pick an account"),
+  category_id: z.string().optional(),
+  frequency: z.enum(RECURRING_FREQUENCIES),
+  next_due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date"),
+  end_date: z.string().optional(),
+  auto_post: z.boolean().optional(),
+});
+
+export type RecurringFormValues = z.infer<typeof recurringFormSchema>;
