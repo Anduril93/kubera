@@ -12,7 +12,7 @@ import type {
 // regular server client resolves "who entered it".
 const LEDGER_SELECT = `
   id, account_id, category_id, type, amount_cents, currency, description, merchant,
-  date, notes, pending, split_parent_id, created_by,
+  date, notes, pending, receipt_url, split_parent_id, created_by,
   category:categories(id, name, kind, icon, color),
   account:accounts(id, name, type),
   creator:profiles!created_by(full_name, email)

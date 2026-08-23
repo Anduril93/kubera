@@ -8,6 +8,7 @@ import { getCategories } from "@/lib/categories-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AddTransactionButton } from "@/components/transactions/add-transaction-button";
+import { ScanReceiptButton } from "@/components/transactions/scan-receipt-button";
 import { TransactionFilters } from "@/components/transactions/transaction-filters";
 import { LedgerTable } from "@/components/transactions/ledger-table";
 
@@ -65,7 +66,10 @@ export default async function TransactionsPage({
     <div className="mx-auto w-full max-w-5xl space-y-5 p-4 sm:p-6">
       <header className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">Transactions</h1>
-        <AddTransactionButton accounts={accounts} categories={categories} />
+        <div className="flex items-center gap-2">
+          <ScanReceiptButton accounts={accounts} categories={categories} />
+          <AddTransactionButton accounts={accounts} categories={categories} />
+        </div>
       </header>
 
       <TransactionFilters accounts={accounts} categories={categories} />

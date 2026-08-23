@@ -42,6 +42,7 @@ export interface LedgerTransaction {
   date: string;
   notes: string | null;
   pending: boolean;
+  receipt_url: string | null;
   split_parent_id: string | null;
   created_by: string | null;
   category: TxnCategoryRef | null;

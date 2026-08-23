@@ -18,6 +18,7 @@ import {
   type LedgerTransaction,
 } from "@/lib/transactions-meta";
 import type { Account } from "@/lib/accounts-meta";
+import type { ReceiptDraft } from "@/lib/types/ai";
 import { centsToDollars } from "@/lib/money";
 import {
   CategorySelect,
@@ -61,6 +62,8 @@ export function TransactionDialog({
   accounts,
   categories,
   transaction,
+  prefill,
+  receiptKey,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -68,6 +71,10 @@ export function TransactionDialog({
   accounts: Account[];
   categories: CategoryOption[];
   transaction?: LedgerTransaction;
+  /** Pre-filled values from a scanned receipt (create mode). */
+  prefill?: ReceiptDraft;
+  /** R2 object key to attach as the transaction's receipt on create. */
+  receiptKey?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -76,14 +83,17 @@ export function TransactionDialog({
     resolver: zodResolver(transactionFormSchema),
     defaultValues: {
       account_id: transaction?.account_id ?? accounts[0]?.id ?? "",
-      category_id: transaction?.category_id ?? CATEGORY_NONE,
+      category_id:
+        transaction?.category_id ?? prefill?.categoryId ?? CATEGORY_NONE,
       type: transaction?.type ?? "expense",
       amount:
         transaction != null
           ? String(centsToDollars(transaction.amount_cents))
-          : "",
-      date: transaction?.date ?? today(),
-      merchant: transaction?.merchant ?? "",
+          : prefill?.amountCents != null
+            ? String(centsToDollars(prefill.amountCents))
+            : "",
+      date: transaction?.date ?? prefill?.date ?? today(),
+      merchant: transaction?.merchant ?? prefill?.merchant ?? "",
       notes: transaction?.notes ?? "",
       pending: transaction?.pending ?? false,
     },
@@ -101,6 +111,7 @@ export function TransactionDialog({
     fd.set("merchant", values.merchant ?? "");
     fd.set("notes", values.notes ?? "");
     if (values.pending) fd.set("pending", "true");
+    if (mode === "create" && receiptKey) fd.set("receipt_url", receiptKey);
     if (mode === "edit" && transaction) fd.set("id", transaction.id);
 
     startTransition(async () => {

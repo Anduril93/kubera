@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { TransactionDialog } from "@/components/transactions/transaction-dialog";
 import { SplitDialog } from "@/components/transactions/split-dialog";
+import { ReceiptLink } from "@/components/transactions/receipt-link";
 
 function CategoryTag({
   name,
@@ -135,6 +136,7 @@ export function LedgerRow({
                 Pending
               </Badge>
             ) : null}
+            {t.receipt_url ? <ReceiptLink transactionId={t.id} /> : null}
           </div>
           {subtitle ? (
             <p className="text-muted-foreground truncate text-sm">{subtitle}</p>

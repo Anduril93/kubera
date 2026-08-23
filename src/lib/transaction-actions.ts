@@ -51,8 +51,17 @@ export async function createTransaction(
     return { error: "Enter a valid amount" };
   }
 
+  // A receipt key from the scan flow — only accept keys in this household's
+  // namespace, so a client can't attach another household's receipt.
+  const rawReceipt = formData.get("receipt_url");
+  const receiptKey =
+    typeof rawReceipt === "string" &&
+    rawReceipt.startsWith(`receipts/${household.id}/`)
+      ? rawReceipt
+      : null;
+
   const supabase = await createClient();
-  const { error } = await supabase.rpc("create_transaction", {
+  const { data, error } = await supabase.rpc("create_transaction", {
     p_account_id: parsed.data.account_id,
     p_type: parsed.data.type,
     p_amount_cents: amountCents,
@@ -62,11 +71,23 @@ export async function createTransaction(
     p_description: parsed.data.description,
     p_notes: parsed.data.notes,
     p_pending: parsed.data.pending ?? false,
-    p_source: "manual",
+    p_source: receiptKey ? "scanned" : "manual",
   });
   if (error) {
     console.error("[transactions] create failed", error);
     return { error: "Could not create the transaction." };
+  }
+
+  // Attach the receipt key to the new row (RLS-scoped). Non-critical if it fails.
+  const row = Array.isArray(data) ? data[0] : data;
+  const newId = (row as { id?: string } | null)?.id;
+  if (receiptKey && newId) {
+    const { error: attachErr } = await supabase
+      .from("transactions")
+      .update({ receipt_url: receiptKey })
+      .eq("id", newId)
+      .eq("household_id", household.id);
+    if (attachErr) console.error("[transactions] receipt attach failed", attachErr);
   }
 
   revalidateLedger();

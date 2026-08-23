@@ -69,8 +69,10 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Match everything except Next internals, static/media assets, and PWA files.
+  // Match everything except Next internals, static/media assets, PWA files, and
+  // API routes. API routes handle their own auth and return JSON errors — the
+  // proxy redirects *pages* to /login, which is wrong for an API.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|offline.html|robots.txt|sitemap.xml|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
+    "/((?!api/|_next/static|_next/image|favicon.ico|manifest.json|sw.js|offline.html|robots.txt|sitemap.xml|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
   ],
 };
