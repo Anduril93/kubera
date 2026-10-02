@@ -44,3 +44,13 @@ next-env.d.ts
 
 # Claude Code local, machine-specific settings (personal; not shared)
 .claude/settings.local.json
+
+# Supabase CLI local state
+supabase/.temp
+
+# iOS
+ios/Config/Secrets.xcconfig
+ios/build/
+xcuserdata/
+*.xcuserstate
+DerivedData/

@@ -26,6 +26,11 @@ they get added deliberately later — do not scaffold them speculatively.
 **Domain**: TBD
 **Tagline**: TBD
 
+**Clients.** The primary client is the native **SwiftUI iOS app in `ios/`** (see
+`ios/README.md`). The Next.js web app is kept running against the same Supabase
+backend until the iOS app is proven, then removed in a separate commit. Both
+clients share the schema, RLS, RPCs and Edge Functions under `supabase/`.
+
 ---
 
 ## Build & Development Commands
@@ -36,7 +41,12 @@ they get added deliberately later — do not scaffold them speculatively.
 - `npm run lint` — Run ESLint
 - `vercel --prod` — Deploy to production (requires Vercel CLI)
 
-No test framework is configured yet.
+No test framework is configured for the web app.
+
+**iOS** (`ios/`, Xcode 27, iOS 26+, Swift 6):
+- `ios/scripts/write-secrets.sh` — writes the gitignored `ios/Config/Secrets.xcconfig` from `.env.local`
+- `xcodebuild test -project ios/Kubera.xcodeproj -scheme Kubera -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` — build + run the Swift Testing suites
+- `supabase functions deploy scan-receipt --project-ref <ref>` — deploy the receipt-scan Edge Function
 
 ---
 
@@ -83,7 +93,11 @@ No test framework is configured yet.
 - Supabase server client via `@supabase/ssr` for server components and API routes
 - Supabase browser client for client components
 - Auth middleware via custom `src/proxy.ts` (NOT `middleware.ts`) — refreshes sessions and redirects unauthenticated users
-- **Server Actions used for all database mutations — never direct browser client inserts**
+- **Web:** Server Actions used for all database mutations — never direct browser client inserts
+- **iOS:** writes go straight to Supabase with the user's JWT, so the **database is the security boundary** —
+  RLS plus the hardening in `0011_native_client_hardening.sql` (definer RPCs with membership checks,
+  same-household reference triggers, revoked direct DML on `transactions`, column-scoped grants).
+  Any invariant a client must not be able to break belongs in SQL, not only in Swift or Zod.
 - **Every finance query is scoped to the caller's household** (see Security Rules) — there is no global/public read path
 - Homepage (`/`) redirects authenticated users to `/dashboard` via server-side session check
 - **All monetary amounts are stored as integer cents (`bigint`)** — never floats. Format at the edge with `Intl.NumberFormat`.
@@ -366,7 +380,16 @@ All AI features are gated by the per-user daily rate limiter (`src/lib/rate-limi
 
 ---
 
-## Cloudflare R2 (Private)
+## Receipt storage
+
+**iOS (current):** private Supabase Storage bucket `receipts` (`0012_receipts_storage.sql`). Objects
+live at `<household_id>/<uuid>.<ext>`; storage policies scope every read/write to household members.
+`transactions.receipt_url` stores `receipts/<that path>` — the same key shape the web app used for R2,
+validated by a trigger. The `scan-receipt` Edge Function (`supabase/functions/`) downloads with the
+caller's JWT, re-checks magic bytes, enforces the AI rate limit, and calls Claude; `ANTHROPIC_API_KEY`
+is an Edge Function secret. Edge Function model strings live in `supabase/functions/_shared/ai-models.ts`.
+
+### Cloudflare R2 (Private, web app only)
 
 Unlike Round Table Recipes (public recipe-photo CDN), **receipts and statements are private**.
 Upload via `POST /api/upload` (validate with the magic-byte `detectFileType()` helper —
@@ -407,8 +430,9 @@ delete helper to avoid orphans.
 - [ ] Reports + CSV/PDF export
 
 ### Phase 4 — Mobile
-- [ ] React Native + Expo app
-- [ ] iOS / Google Play release
+- [x] Native SwiftUI iOS app (`ios/`) at web parity
+- [ ] TestFlight / App Store release
+- [ ] Retire the Next.js web app
 
 ---
 
@@ -487,7 +511,9 @@ TURNSTILE_SECRET_KEY=              # server only
 - **Every new table gets RLS + both SELECT and write policies, scoped to household membership, before the task is done.**
 - **All money is integer cents (`bigint`); format only at the display edge.**
 - Scope every finance query to the current household (`getCurrentHousehold()`); there is no public read path.
-- Server Actions for all mutations — never direct browser client inserts.
+- Web: Server Actions for all mutations — never direct browser client inserts.
+- iOS: ledger writes only through the RPCs (`create_transaction`, `update_transaction`, `delete_transaction`,
+  `split_transaction`, `post_recurring_rule`); call `app.didMutate()` after any write. See `ios/README.md`.
 - Use existing shadcn/ui components before building custom ones; keep files under ~150 lines.
 - AI model strings come only from `src/lib/ai-models.ts`. AI features must check the per-user rate limiter.
 - The Plaid `access_token` is never sent to the client, never logged, and only read server-side via the service-role client.

@@ -1,0 +1,10 @@
+// Shared build settings for the Kubera iOS app.
+//
+// Supabase connection values come from Secrets.xcconfig (gitignored). Generate
+// it from the repo's .env.local with:  ios/scripts/write-secrets.sh
+// The anon key is a public client key — RLS is what protects the data — but it
+// is kept out of git so dev and prod projects never get mixed up.
+SUPABASE_HOST =
+SUPABASE_ANON_KEY =
+
+#include? "Secrets.xcconfig"
