@@ -1,4 +1,4 @@
-# Roundtable Finance — iOS
+# Kubera — iOS
 
 Native SwiftUI client (iOS 26+, Swift 6) for the household finance app. It talks
 to the same Supabase project as the Next.js web app.

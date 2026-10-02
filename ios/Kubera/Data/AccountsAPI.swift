@@ -2,7 +2,10 @@ import Foundation
 import Supabase
 
 enum AccountsAPI {
-    private static let columns = "id, household_id, name, type, institution, current_balance_cents, currency, is_manual, is_archived"
+    private static let columns = """
+        id, household_id, name, type, institution, current_balance_cents, currency, is_manual, is_archived, \
+        plaid_item_id, mask, available_balance_cents, bank_balance_at
+        """
 
     /// Non-archived accounts, by name.
     static func list() async throws -> [Account] {
@@ -51,7 +54,7 @@ enum AccountsAPI {
             "institution": .of(fields.institution),
             "currency": .of(fields.currency),
         ]
-        if let balanceCents { patch["current_balance_cents"] = .of(balanceCents) }
+        if let balanceCents { patch["current_balance_cents"] = .of(balanceCents) } // never sent for linked accounts
         let rows: [IdRow] = try await DB.client.from("accounts")
             .update(patch).eq("id", value: id).select("id").execute().value
         if rows.isEmpty { throw DisplayableError("Account not found.") }

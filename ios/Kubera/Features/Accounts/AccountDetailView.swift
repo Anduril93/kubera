@@ -22,7 +22,7 @@ struct AccountDetailView: View {
                             if account.isArchived { Pill(text: "Archived") }
                         }
                         .font(.subheadline)
-                        Text(account.type.isLiability ? "Balance owed" : "Current balance")
+                        Text(account.isLinked ? "Bank balance" : (account.type.isLiability ? "Balance owed" : "Current balance"))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .padding(.top, 6)
@@ -31,6 +31,10 @@ struct AccountDetailView: View {
                             .font(.largeTitle.weight(.semibold))
                     }
                     .padding(.vertical, 4)
+                }
+
+                if account.isLinked {
+                    ReconcileSection(account: account)
                 }
 
                 Section("Recent transactions") {

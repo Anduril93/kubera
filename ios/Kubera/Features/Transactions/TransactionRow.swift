@@ -16,6 +16,13 @@ struct TransactionRow: View {
                     Text(transaction.title).lineLimit(1)
                     if isSplit { Pill(text: "Split") }
                     if transaction.pending { Pill(text: "Pending", style: .outline) }
+                    if transaction.isMatched {
+                        Image(systemName: "link").font(.caption).foregroundStyle(Color.positive)
+                            .accessibilityLabel("Matched to bank")
+                    } else if transaction.source == .imported {
+                        Image(systemName: "building.columns").font(.caption).foregroundStyle(.secondary)
+                            .accessibilityLabel("From bank")
+                    }
                     if transaction.receiptUrl != nil, let onOpenReceipt {
                         Button("View receipt", systemImage: "paperclip", action: onOpenReceipt)
                             .labelStyle(.iconOnly)

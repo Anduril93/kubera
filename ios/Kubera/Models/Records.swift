@@ -75,13 +75,43 @@ struct Account: Codable, Sendable, Identifiable, Hashable {
     var currency: String
     var isManual: Bool
     var isArchived: Bool
+    var plaidItemId: UUID? = nil
+    var mask: String? = nil
+    var availableBalanceCents: Int? = nil
+    var bankBalanceAt: Date? = nil
+
+    /// Linked accounts take their balance from the bank (migration 0013).
+    var isLinked: Bool { !isManual }
 
     enum CodingKeys: String, CodingKey {
-        case id, name, type, institution, currency
+        case id, name, type, institution, currency, mask
         case householdId = "household_id"
         case currentBalanceCents = "current_balance_cents"
         case isManual = "is_manual"
         case isArchived = "is_archived"
+        case plaidItemId = "plaid_item_id"
+        case availableBalanceCents = "available_balance_cents"
+        case bankBalanceAt = "bank_balance_at"
+    }
+}
+
+/// One connected bank login (plaid_items). The access token never reaches the app.
+struct BankConnection: Codable, Sendable, Identifiable, Hashable {
+    enum Status: String, Codable, Sendable { case active, loginRequired = "login_required", error }
+
+    let id: UUID
+    let institutionName: String?
+    let status: Status
+    let errorCode: String?
+    let lastSyncedAt: Date?
+
+    var name: String { institutionName ?? "Bank" }
+
+    enum CodingKeys: String, CodingKey {
+        case id, status
+        case institutionName = "institution_name"
+        case errorCode = "error_code"
+        case lastSyncedAt = "last_synced_at"
     }
 }
 
@@ -148,14 +178,36 @@ struct LedgerTransaction: Codable, Sendable, Identifiable, Hashable {
     let category: CategoryRef?
     let account: AccountRef?
     let creator: Creator?
+    var source: TransactionSource = .manual
+    var reviewState: String? = nil
+    var matchState: String? = nil
+    var bankSnapshot: BankSnapshot? = nil
+
+    /// What the bank reported, kept when a bank transaction is merged into an entry.
+    struct BankSnapshot: Codable, Sendable, Hashable {
+        let name: String?
+        let merchant: String?
+        let amountCents: Int?
+        let date: CalendarDate?
+        enum CodingKeys: String, CodingKey {
+            case name, merchant, date
+            case amountCents = "amount_cents"
+        }
+    }
 
     var title: String { merchant ?? description ?? "—" }
+    var needsReview: Bool { reviewState == "needs_review" }
+    var isMatched: Bool { matchState != nil }
+    var isFromBank: Bool { source == .imported || isMatched }
     var signedAmountCents: Int { type.signed(amountCents) }
     var creatorLabel: String? { creator?.fullName ?? creator?.email }
 
     enum CodingKeys: String, CodingKey {
-        case id, type, currency, description, merchant, date, notes, pending, category, account, creator
+        case id, type, currency, description, merchant, date, notes, pending, category, account, creator, source
         case accountId = "account_id"
+        case reviewState = "review_state"
+        case matchState = "match_state"
+        case bankSnapshot = "bank_snapshot"
         case categoryId = "category_id"
         case amountCents = "amount_cents"
         case receiptUrl = "receipt_url"

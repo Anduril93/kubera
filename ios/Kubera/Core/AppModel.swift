@@ -25,6 +25,10 @@ final class AppModel {
     private(set) var profile: Profile?
     private(set) var accounts: [Account] = []
     private(set) var categories: [Category] = []
+    private(set) var bankConnections: [BankConnection] = []
+    /// Bank-originated transactions waiting in the review inbox.
+    private(set) var reviewCount = 0
+    private(set) var isSyncingBanks = false
 
     enum Tab: Hashable { case dashboard, transactions, budgets, accounts, more }
     var selectedTab: Tab = .dashboard
@@ -90,6 +94,8 @@ final class AppModel {
         profile = nil
         accounts = []
         categories = []
+        bankConnections = []
+        reviewCount = 0
         self.phase = phase
     }
 
@@ -138,9 +144,42 @@ final class AppModel {
     func refreshReferenceData() async {
         async let accounts = AccountsAPI.list()
         async let categories = CategoriesAPI.list()
+        async let connections = BankAPI.connections()
         if let accounts = try? await accounts { self.accounts = accounts }
         if let categories = try? await categories { self.categories = categories }
+        if let connections = try? await connections { self.bankConnections = connections }
+        await refreshReviewCount()
     }
+
+    /// Bank transactions arrive by webhook while the app is open, so screens
+    /// re-check the inbox count whenever they reload.
+    func refreshReviewCount() async {
+        if let householdId = household?.id, let count = try? await BankAPI.reviewCount(householdId: householdId) {
+            reviewCount = count
+        }
+    }
+
+    /// Pulls new bank transactions for every connection, then refreshes the app.
+    /// Quietly does nothing when no bank is linked.
+    func syncBanks(announce: Bool = false) async {
+        guard !bankConnections.isEmpty, !isSyncingBanks else { return }
+        isSyncingBanks = true
+        defer { isSyncingBanks = false }
+        do {
+            let result = try await BankAPI.sync()
+            await didMutate()
+            if announce {
+                let total = result.new + result.matched
+                toasts.show(total == 0 ? "Up to date" : "\(total) new bank \(total == 1 ? "transaction" : "transactions")")
+            }
+        } catch {
+            if announce {
+                toasts.error(userMessage(for: error, context: "bank", fallback: "Couldn't reach your bank right now."))
+            }
+        }
+    }
+
+    func connection(_ id: UUID?) -> BankConnection? { bankConnections.first { $0.id == id } }
 
     /// Call after any successful write: refreshes accounts/categories and tells
     /// every visible screen to reload.

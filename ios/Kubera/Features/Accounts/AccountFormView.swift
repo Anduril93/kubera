@@ -27,7 +27,13 @@ struct AccountFormView: View {
                     LabeledTextField(title: "Institution", text: $institution, prompt: "Optional")
                 }
                 Section {
-                    AmountField(title: isEditing ? "Balance" : "Starting balance", text: $balance, allowsNegative: true)
+                    if account?.isLinked == true {
+                        LabeledContent("Balance") {
+                            Text("From your bank").foregroundStyle(.secondary)
+                        }
+                    } else {
+                        AmountField(title: isEditing ? "Balance" : "Starting balance", text: $balance, allowsNegative: true)
+                    }
                     LabeledContent("Currency") {
                         TextField("Currency", text: $currency)
                             .multilineTextAlignment(.trailing)
@@ -98,7 +104,8 @@ struct AccountFormView: View {
                 if let account {
                     // Only overwrite the stored balance if the user changed it — a
                     // transaction posted while this sheet was open must not be undone.
-                    try await AccountsAPI.update(account.id, fields, balanceCents: balance == initialBalance ? nil : balanceCents)
+                    let changed = balance != initialBalance && !account.isLinked
+                    try await AccountsAPI.update(account.id, fields, balanceCents: changed ? balanceCents : nil)
                 } else {
                     guard let householdId = app.household?.id else { return }
                     try await AccountsAPI.create(householdId: householdId, fields, startingBalanceCents: balanceCents ?? 0)

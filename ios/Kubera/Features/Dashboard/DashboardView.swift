@@ -36,7 +36,10 @@ struct DashboardView: View {
         }
         .overlay { if scanner.isWorking { ScanningOverlay() } }
         .task(id: app.dataVersion) { await load() }
-        .refreshable { await app.didMutate() }
+        .refreshable {
+            await app.syncBanks(announce: true)
+            await app.didMutate()
+        }
         .sheet(item: $form) { TransactionFormView(mode: $0) }
         .receiptScanner(scanner) { form = .create(scan: $0) }
     }

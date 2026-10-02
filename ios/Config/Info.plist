@@ -7,6 +7,6 @@
 	<key>SupabaseAnonKey</key>
 	<string>$(SUPABASE_ANON_KEY)</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Roundtable uses the camera to scan receipts into transactions.</string>
+	<string>Kubera uses the camera to scan receipts into transactions.</string>
 </dict>
 </plist>

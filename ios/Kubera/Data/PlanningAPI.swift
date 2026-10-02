@@ -4,21 +4,26 @@ import Supabase
 // Dashboard aggregates, budgets, recurring rules, goals and debts.
 
 enum DashboardAPI {
-    /// Income vs expense over top-level rows in [start, end).
+    /// Income vs expense over top-level rows in [start, end). Rows in a
+    /// transfer-kind category (moving money between your own accounts, card
+    /// payments) are left out so bank-synced transfers don't count as income.
     static func monthSummary(householdId: UUID, range: FiscalRange) async throws -> MonthSummary {
         struct R: Decodable {
+            struct Cat: Decodable { let kind: CategoryKind }
             let amountCents: Int
             let type: TransactionType
-            enum CodingKeys: String, CodingKey { case type; case amountCents = "amount_cents" }
+            let category: Cat?
+            enum CodingKeys: String, CodingKey { case type, category; case amountCents = "amount_cents" }
         }
-        let rows: [R] = try await DB.client.from("transactions")
-            .select("amount_cents, type")
+        let all: [R] = try await DB.client.from("transactions")
+            .select("amount_cents, type, category:categories(kind)")
             .eq("household_id", value: householdId)
             .is("split_parent_id", value: nil)
             .in("type", values: ["income", "expense"])
             .gte("date", value: range.start.description)
             .lt("date", value: range.end.description)
             .execute().value
+        let rows = all.filter { $0.category?.kind != .transfer }
         return MonthSummary(
             incomeCents: rows.filter { $0.type == .income }.reduce(0) { $0 + $1.amountCents },
             expenseCents: rows.filter { $0.type == .expense }.reduce(0) { $0 + $1.amountCents }

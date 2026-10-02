@@ -5,6 +5,7 @@ struct AccountsView: View {
     @State private var showingAdd = false
     @State private var editing: Account?
     @State private var archiving: Account?
+    @State private var linker = BankLinker()
 
     var body: some View {
         let accounts = app.accounts
@@ -26,6 +27,12 @@ struct AccountsView: View {
                         }
                     }
                     .padding(.vertical, 4)
+                }
+
+                if !app.bankConnections.isEmpty {
+                    Section("Bank connections") {
+                        ForEach(app.bankConnections) { BankConnectionRow(connection: $0, linker: linker) }
+                    }
                 }
 
                 ForEach(AccountGroup.grouping(accounts)) { group in
@@ -59,15 +66,27 @@ struct AccountsView: View {
         .navigationDestination(for: UUID.self) { AccountDetailView(accountId: $0) }
         .toolbar {
             if !accounts.isEmpty {
-                Button("Add account", systemImage: "plus") { showingAdd = true }
+                Menu("Add account", systemImage: "plus") {
+                    Button("Link a bank", systemImage: "building.columns") { linker.start(app: app) }
+                    Button("Add a manual account", systemImage: "square.and.pencil") { showingAdd = true }
+                }
+                .disabled(linker.isWorking)
             }
         }
         .emptyState(when: accounts.isEmpty, "No accounts yet", systemImage: "building.columns",
                     description: "Add your checking, savings, credit cards and more to track balances and your net position.") {
-            Button("Add account", systemImage: "plus") { showingAdd = true }
-                .buttonStyle(.borderedProminent)
+            VStack(spacing: 10) {
+                Button("Link a bank", systemImage: "building.columns") { linker.start(app: app) }
+                    .buttonStyle(.borderedProminent)
+                Button("Add a manual account", systemImage: "square.and.pencil") { showingAdd = true }
+            }
+            .disabled(linker.isWorking)
         }
-        .refreshable { await app.didMutate() }
+        .refreshable {
+            await app.syncBanks(announce: true)
+            await app.didMutate()
+        }
+        .bankLink(linker)
         .sheet(isPresented: $showingAdd) { AccountFormView(account: nil) }
         .sheet(item: $editing) { AccountFormView(account: $0) }
         .archiveConfirmation($archiving)
@@ -81,9 +100,16 @@ struct AccountRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(account.name)
-                if let institution = account.institution {
-                    Text(institution).font(.subheadline).foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text(account.name)
+                    if account.isLinked {
+                        Image(systemName: "link").font(.caption).foregroundStyle(.secondary)
+                            .accessibilityLabel("Linked to bank")
+                    }
+                }
+                let detail = [account.institution, account.mask.map { "•••• \($0)" }].compactMap { $0 }
+                if !detail.isEmpty {
+                    Text(detail.joined(separator: " · ")).font(.subheadline).foregroundStyle(.secondary)
                 }
             }
             Spacer()

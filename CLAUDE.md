@@ -1,15 +1,13 @@
-# CLAUDE.md — Roundtable Finance
+# CLAUDE.md — Kubera
 
 This file provides guidance to Claude Code when working in this repository.
 Always read this file fully at the start of every session before making any changes.
-
-> **Working title.** "Roundtable Finance" is a placeholder — rename via find-and-replace once a final brand is chosen.
 
 ---
 
 ## Project Overview
 
-**Roundtable Finance** is a private personal-finance app for a single household.
+**Kubera** is a private personal-finance app for a single household.
 It tracks income, expenses, budgets, recurring bills, savings goals, debts, and net
 worth, with AI assistance for receipt scanning, auto-categorization, monthly insights,
 and a conversational finance assistant. Bank accounts can be connected for automatic
@@ -438,7 +436,7 @@ delete helper to avoid orphans.
 
 ## Design Guidelines
 
-- **Brand name**: Roundtable Finance (working title)
+- **Brand name**: Kubera. Logo: gold $ on black (`brand/`; app icon and in-app `BrandMark` asset)
 - **Tone**: Calm, trustworthy, clear — a private ledger, not a bank dashboard or a hype app
 - **Numbers**: tabular figures (`font-variant-numeric: tabular-nums`); right-align amounts; income vs expense color-coded consistently
 - **Mobile-first**: every layout must work on phones; sidebar collapses to a bottom tab/hamburger at `lg`

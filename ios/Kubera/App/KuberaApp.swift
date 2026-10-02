@@ -4,6 +4,7 @@ import SwiftUI
 struct KuberaApp: App {
     @State private var app = AppModel()
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .system
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
@@ -12,6 +13,10 @@ struct KuberaApp: App {
                 .toasts(app.toasts)
                 .preferredColorScheme(appearance.colorScheme)
                 .task { app.start() }
+                .onChange(of: scenePhase) { _, phase in
+                    // Coming back to the app: pick up anything the bank webhook delivered.
+                    if phase == .active, app.phase == .ready { Task { await app.didMutate() } }
+                }
         }
     }
 }
@@ -112,12 +117,19 @@ struct MoreView: View {
                     Label("Appearance", systemImage: "circle.lefthalf.filled")
                 }
             }
+            #if DEBUG
+            Section {
+                NavigationLink { DeveloperView() } label: { Label("Bank sandbox tools", systemImage: "hammer") }
+            } header: {
+                Text("Developer")
+            }
+            #endif
             Section {
                 Button("Sign out", role: .destructive) { confirmSignOut = true }
             }
         }
         .navigationTitle("More")
-        .confirmationDialog("Sign out of Roundtable?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+        .confirmationDialog("Sign out of Kubera?", isPresented: $confirmSignOut, titleVisibility: .visible) {
             Button("Sign out", role: .destructive) { Task { await app.signOut() } }
         }
     }

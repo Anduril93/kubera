@@ -16,12 +16,29 @@ struct TransactionsView: View {
     @State private var form: TransactionFormView.Mode?
     @State private var splitting: LedgerItem?
     @State private var deleting: LedgerItem?
+    @State private var matching: LedgerTransaction?
     @State private var expanded: Set<UUID> = []
     @State private var receiptURL: URL?
     @State private var scanner = ReceiptScanner()
 
     var body: some View {
         List {
+            if app.reviewCount > 0 {
+                Section {
+                    NavigationLink {
+                        ReviewView()
+                    } label: {
+                        Label {
+                            Text("\(app.reviewCount) to review")
+                                .fontWeight(.semibold)
+                        } icon: {
+                            Image(systemName: "tray.full").foregroundStyle(Color.accentColor)
+                        }
+                    }
+                } footer: {
+                    Text("New from your bank — confirm categories and matches.")
+                }
+            }
             if !items.isEmpty {
                 Section {
                     ForEach(items) { item in
@@ -70,10 +87,14 @@ struct TransactionsView: View {
             filters.search = searchText
         }
         .task(id: ReloadKey(filters: filters, version: app.dataVersion)) { await reload() }
-        .refreshable { await reload() }
+        .refreshable {
+            await app.syncBanks(announce: true)
+            await reload()
+        }
         .sheet(isPresented: $showingFilters) { TransactionFiltersSheet(filters: $filters) }
         .sheet(item: $form) { TransactionFormView(mode: $0) }
         .sheet(item: $splitting) { SplitFormView(item: $0) }
+        .sheet(item: $matching) { MatchPickerView(txn: $0) }
         .quickLookPreview($receiptURL)
         .receiptScanner(scanner) { result in form = .create(scan: result) }
         .alert("Delete this transaction?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
@@ -114,6 +135,12 @@ struct TransactionsView: View {
             Button(item.children.isEmpty ? "Split" : "Edit split", systemImage: "arrow.triangle.branch") { splitting = item }
             if item.transaction.receiptUrl != nil {
                 Button("View receipt", systemImage: "paperclip") { openReceipt(item.transaction) }
+            }
+            if item.transaction.isMatched {
+                Button("Undo bank match", systemImage: "link.badge.plus") { unmatch(item.transaction) }
+            } else if item.transaction.source == .imported || app.account(item.transaction.accountId)?.isLinked == true {
+                Button(item.transaction.source == .imported ? "Match to my entry…" : "Match to bank transaction…",
+                       systemImage: "link") { matching = item.transaction }
             }
             Button("Delete", systemImage: "trash", role: .destructive) { deleting = item }
         }
@@ -169,7 +196,9 @@ struct TransactionsView: View {
     private func reload() async {
         guard let householdId = app.household?.id else { return }
         do {
+            async let count: Void = app.refreshReviewCount()
             let result = try await TransactionsAPI.ledger(householdId: householdId, filters: filters, page: 1)
+            await count
             items = result.items
             total = result.total
             page = 1
@@ -207,6 +236,18 @@ struct TransactionsView: View {
                 app.toasts.show("Transaction deleted")
             } catch {
                 app.toasts.error(userMessage(for: error, context: "transactions", fallback: "Could not delete the transaction."))
+            }
+        }
+    }
+
+    private func unmatch(_ transaction: LedgerTransaction) {
+        Task {
+            do {
+                try await BankAPI.unmatch(transaction.id)
+                await app.didMutate()
+                app.toasts.show("Match undone — the bank transaction is back in review")
+            } catch {
+                app.toasts.error(userMessage(for: error, context: "bank", fallback: "Couldn't undo the match."))
             }
         }
     }

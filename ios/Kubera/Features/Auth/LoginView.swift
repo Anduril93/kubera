@@ -19,7 +19,7 @@ struct LoginView: View {
                 Section {
                     VStack(spacing: 10) {
                         BrandMark(size: 56)
-                        Text("Roundtable Finance").font(.title2.weight(.semibold))
+                        Text("Kubera").font(.title2.weight(.semibold))
                         Text("Enter your email and password to access your household.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
@@ -88,24 +88,16 @@ struct LoginView: View {
     }
 }
 
-/// The "round table" mark from the app icon, drawn natively.
+/// The Kubera mark (gold $ on black), from the asset catalog.
 struct BrandMark: View {
     var size: CGFloat = 28
 
     var body: some View {
-        Canvas { context, canvasSize in
-            let s = canvasSize.width / 512
-            let center = CGPoint(x: canvasSize.width / 2, y: canvasSize.height / 2)
-            func circle(_ c: CGPoint, _ r: CGFloat) -> Path {
-                Path(ellipseIn: CGRect(x: c.x - r * s, y: c.y - r * s, width: 2 * r * s, height: 2 * r * s))
-            }
-            context.stroke(circle(center, 150), with: .foreground, lineWidth: 28 * s)
-            context.fill(circle(center, 46), with: .foreground)
-            for (dx, dy) in [(0.0, -1.0), (0.0, 1.0), (-1.0, 0.0), (1.0, 0.0)] {
-                context.fill(circle(CGPoint(x: center.x + dx * 150 * s, y: center.y + dy * 150 * s), 26), with: .foreground)
-            }
-        }
-        .frame(width: size, height: size)
-        .accessibilityHidden(true)
+        Image("BrandMark")
+            .resizable()
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .clipShape(.rect(cornerRadius: size * 0.225, style: .continuous))
+            .accessibilityHidden(true)
     }
 }

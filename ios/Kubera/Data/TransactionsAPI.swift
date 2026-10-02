@@ -32,6 +32,7 @@ enum TransactionsAPI {
     static let select = """
         id, account_id, category_id, type, amount_cents, currency, description, merchant, \
         date, notes, pending, receipt_url, split_parent_id, created_by, \
+        source, review_state, match_state, bank_snapshot, \
         category:categories(id, name, kind, color), \
         account:accounts(id, name, type), \
         creator:profiles!created_by(full_name, email)
