@@ -165,9 +165,10 @@ struct TransactionsView: View {
         }
         ToolbarItemGroup(placement: .topBarTrailing) {
             ScanReceiptMenu(scanner: scanner)
-                .disabled(app.accounts.isEmpty || scanner.isWorking)
-            Button("Add transaction", systemImage: "plus") { form = .create() }
-                .disabled(app.accounts.isEmpty)
+                .disabled(scanner.isWorking)
+            Button("Add transaction", systemImage: "plus") {
+                if app.requireAccount() { form = .create() }
+            }
         }
     }
 

@@ -33,6 +33,20 @@ final class AppModel {
     enum Tab: Hashable { case dashboard, transactions, budgets, accounts, more }
     var selectedTab: Tab = .dashboard
 
+    /// Shown (from the tab view) when an action needs an account and there is none.
+    var needsAccountPrompt = false
+
+    /// Returns true when at least one account exists; otherwise explains why the
+    /// action can't run. Used instead of disabling buttons, because disabled
+    /// toolbar buttons look nearly identical to enabled ones.
+    func requireAccount() -> Bool {
+        if accounts.isEmpty {
+            needsAccountPrompt = true
+            return false
+        }
+        return true
+    }
+
     /// Bumped after every successful write; screens reload with `.task(id:)`.
     private(set) var dataVersion = 0
 

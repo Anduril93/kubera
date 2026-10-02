@@ -74,9 +74,18 @@ final class ReceiptScanner {
 }
 
 struct ScanReceiptMenu: View {
+    @Environment(AppModel.self) private var app
     let scanner: ReceiptScanner
 
     var body: some View {
+        if app.accounts.isEmpty {
+            Button("Scan receipt", systemImage: "doc.text.viewfinder") { _ = app.requireAccount() }
+        } else {
+            menu
+        }
+    }
+
+    private var menu: some View {
         Menu {
             if VNDocumentCameraViewController.isSupported {
                 Button("Scan with camera", systemImage: "camera") { scanner.presenting = .camera }

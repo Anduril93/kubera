@@ -46,15 +46,14 @@ struct BillsView: View {
         .navigationTitle("Bills & income")
         .toolbar {
             if !rules.isEmpty {
-                Button("New rule", systemImage: "plus") { showingAdd = true }.disabled(app.accounts.isEmpty)
+                Button("New rule", systemImage: "plus") { if app.requireAccount() { showingAdd = true } }
             }
         }
         .overlay { if !loaded { ProgressView() } }
         .emptyState(when: loaded && rules.isEmpty, "No recurring rules yet", systemImage: "calendar.badge.clock",
                     description: "Add your recurring bills and income (rent, salary, subscriptions) to see what’s coming up and post each one when it’s due.") {
-            Button("New rule", systemImage: "plus") { showingAdd = true }
+            Button("New rule", systemImage: "plus") { if app.requireAccount() { showingAdd = true } }
                 .buttonStyle(.borderedProminent)
-                .disabled(app.accounts.isEmpty)
         }
         .task(id: app.dataVersion) { await load() }
         .refreshable { await load() }

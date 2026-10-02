@@ -88,6 +88,12 @@ struct MainTabView: View {
                 NavigationStack { MoreView() }
             }
         }
+        .alert("Add an account first", isPresented: $app.needsAccountPrompt) {
+            Button("Go to Accounts") { app.selectedTab = .accounts }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Transactions belong to an account. Link your bank or add a manual account, then try again.")
+        }
     }
 }
 

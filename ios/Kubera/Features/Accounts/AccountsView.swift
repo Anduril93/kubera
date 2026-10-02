@@ -7,6 +7,8 @@ struct AccountsView: View {
     @State private var archiving: Account?
     @State private var linker = BankLinker()
 
+    private var isEmpty: Bool { app.accounts.isEmpty && app.bankConnections.isEmpty }
+
     var body: some View {
         let accounts = app.accounts
         let net = NetPosition(accounts: accounts)
@@ -28,13 +30,17 @@ struct AccountsView: View {
                     }
                     .padding(.vertical, 4)
                 }
+            }
 
-                if !app.bankConnections.isEmpty {
-                    Section("Bank connections") {
-                        ForEach(app.bankConnections) { BankConnectionRow(connection: $0, linker: linker) }
-                    }
+            // Shown even with no accounts, so a broken or stale connection
+            // can always be reconnected or disconnected.
+            if !app.bankConnections.isEmpty {
+                Section("Bank connections") {
+                    ForEach(app.bankConnections) { BankConnectionRow(connection: $0, linker: linker) }
                 }
+            }
 
+            if !accounts.isEmpty {
                 ForEach(AccountGroup.grouping(accounts)) { group in
                     Section {
                         ForEach(group.accounts) { account in
@@ -65,7 +71,7 @@ struct AccountsView: View {
         .navigationTitle("Accounts")
         .navigationDestination(for: UUID.self) { AccountDetailView(accountId: $0) }
         .toolbar {
-            if !accounts.isEmpty {
+            if !isEmpty {
                 Menu("Add account", systemImage: "plus") {
                     Button("Link a bank", systemImage: "building.columns") { linker.start(app: app) }
                     Button("Add a manual account", systemImage: "square.and.pencil") { showingAdd = true }
@@ -73,7 +79,7 @@ struct AccountsView: View {
                 .disabled(linker.isWorking)
             }
         }
-        .emptyState(when: accounts.isEmpty, "No accounts yet", systemImage: "building.columns",
+        .emptyState(when: isEmpty, "No accounts yet", systemImage: "building.columns",
                     description: "Add your checking, savings, credit cards and more to track balances and your net position.") {
             VStack(spacing: 10) {
                 Button("Link a bank", systemImage: "building.columns") { linker.start(app: app) }
