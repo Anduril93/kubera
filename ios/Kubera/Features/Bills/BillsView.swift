@@ -53,7 +53,7 @@ struct BillsView: View {
         .emptyState(when: loaded && rules.isEmpty, "No recurring rules yet", systemImage: "calendar.badge.clock",
                     description: "Add your recurring bills and income (rent, salary, subscriptions) to see what’s coming up and post each one when it’s due.") {
             Button("New rule", systemImage: "plus") { if app.requireAccount() { showingAdd = true } }
-                .buttonStyle(.borderedProminent)
+                .goldProminent()
         }
         .task(id: app.dataVersion) { await load() }
         .refreshable { await load() }
@@ -135,9 +135,9 @@ struct BillRow: View {
                 // Explicit colors: in a List row the icon would otherwise take the
                 // (near-black) accent tint and vanish on the prominent button.
                 Label("Post now", systemImage: "paperplane")
-                    .foregroundStyle(Color(.systemBackground))
+                    .foregroundStyle(Color.onGold)
             }
-            .buttonStyle(.borderedProminent)
+            .goldProminent()
             .controlSize(.small)
         }
         .padding(.vertical, 4)

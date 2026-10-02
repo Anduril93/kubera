@@ -65,7 +65,7 @@ struct OnboardingView: View {
                     Button(action: submit) {
                         Text(buttonTitle).frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .goldProminent()
                     .controlSize(.large)
                     .disabled(isWorking)
                 }

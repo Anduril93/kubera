@@ -54,7 +54,7 @@ struct DashboardView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Net worth").font(.subheadline).foregroundStyle(.secondary)
                     MoneyText(cents: net.netCents, currency: app.currency, tone: .signed)
-                        .font(.largeTitle.weight(.semibold))
+                        .heroAmount()
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                 }

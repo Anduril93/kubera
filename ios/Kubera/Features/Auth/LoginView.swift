@@ -19,7 +19,7 @@ struct LoginView: View {
                 Section {
                     VStack(spacing: 10) {
                         BrandMark(size: 56)
-                        Text("Kubera").font(.title2.weight(.semibold))
+                        Text("Kubera").font(.largeTitle.weight(.semibold)).fontDesign(.serif).foregroundStyle(Color.gold)
                         Text("Enter your email and password to access your household.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
@@ -53,7 +53,7 @@ struct LoginView: View {
                         Text(isSigningIn ? "Signing in…" : "Sign in")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .goldProminent()
                     .controlSize(.large)
                     .disabled(isSigningIn || email.isEmpty || password.isEmpty)
                 }

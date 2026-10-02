@@ -3,37 +3,33 @@ import SwiftUI
 @main
 struct KuberaApp: App {
     @State private var app = AppModel()
-    @AppStorage(Appearance.storageKey) private var appearance: Appearance = .system
     @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        // Gilded navigation titles: the logo's serif, in cream.
+        let cream = UIColor(Color.cream)
+        func serif(_ style: UIFont.TextStyle, _ weight: UIFont.Weight) -> UIFont {
+            let base = UIFont.systemFont(ofSize: UIFont.preferredFont(forTextStyle: style).pointSize, weight: weight)
+            return UIFont(descriptor: base.fontDescriptor.withDesign(.serif) ?? base.fontDescriptor, size: 0)
+        }
+        let bar = UINavigationBar.appearance()
+        bar.largeTitleTextAttributes = [.font: serif(.largeTitle, .bold), .foregroundColor: cream]
+        bar.titleTextAttributes = [.font: serif(.headline, .semibold), .foregroundColor: cream]
+    }
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(app)
                 .toasts(app.toasts)
-                .preferredColorScheme(appearance.colorScheme)
+                .preferredColorScheme(.dark)
+                .tint(.gold)
+                .foregroundStyle(Color.cream)
                 .task { app.start() }
                 .onChange(of: scenePhase) { _, phase in
                     // Coming back to the app: pick up anything the bank webhook delivered.
                     if phase == .active, app.phase == .ready { Task { await app.didMutate() } }
                 }
-        }
-    }
-}
-
-enum Appearance: String, CaseIterable, Identifiable {
-    static let storageKey = "appearance"
-
-    case system, light, dark
-
-    var id: String { rawValue }
-    var label: String { rawValue.capitalized }
-
-    var colorScheme: ColorScheme? {
-        switch self {
-        case .system: nil
-        case .light: .light
-        case .dark: .dark
         }
     }
 }
@@ -59,7 +55,7 @@ struct RootView: View {
                 Text(message)
             } actions: {
                 Button("Try again") { Task { await app.retry() } }
-                    .buttonStyle(.borderedProminent)
+                    .goldProminent()
                 Button("Sign out", role: .destructive) { Task { await app.signOut() } }
             }
         }
@@ -99,7 +95,6 @@ struct MainTabView: View {
 
 struct MoreView: View {
     @Environment(AppModel.self) private var app
-    @AppStorage(Appearance.storageKey) private var appearance: Appearance = .system
     @State private var confirmSignOut = false
 
     var body: some View {
@@ -116,11 +111,6 @@ struct MoreView: View {
                     } label: {
                         Label("Household", systemImage: "person.2")
                     }
-                }
-                Picker(selection: $appearance) {
-                    ForEach(Appearance.allCases) { Text($0.label).tag($0) }
-                } label: {
-                    Label("Appearance", systemImage: "circle.lefthalf.filled")
                 }
             }
             #if DEBUG

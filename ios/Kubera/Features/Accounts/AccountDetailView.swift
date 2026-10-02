@@ -28,7 +28,7 @@ struct AccountDetailView: View {
                             .padding(.top, 6)
                         MoneyText(cents: account.currentBalanceCents, currency: account.currency,
                                   tone: account.type.isLiability ? .liability : .auto)
-                            .font(.largeTitle.weight(.semibold))
+                            .heroAmount()
                     }
                     .padding(.vertical, 4)
                 }

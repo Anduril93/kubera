@@ -120,7 +120,7 @@ struct BankConnectionRow: View {
             Spacer()
             if connection.status != .active {
                 Button("Reconnect") { linker.start(app: app, reconnecting: connection) }
-                    .buttonStyle(.borderedProminent)
+                    .goldProminent()
                     .controlSize(.small)
             }
             Menu {

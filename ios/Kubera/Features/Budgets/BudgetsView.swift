@@ -36,7 +36,7 @@ struct BudgetsView: View {
         .overlay { if !loaded { ProgressView() } }
         .emptyState(when: loaded && budgets.isEmpty, "No budgets yet", systemImage: "target",
                     description: "Set a spending limit for a category and track how much of it you’ve used this period.") {
-            Button("Create budget", systemImage: "plus") { showingAdd = true }.buttonStyle(.borderedProminent)
+            Button("Create budget", systemImage: "plus") { showingAdd = true }.goldProminent()
         }
         .task(id: app.dataVersion) { await load() }
         .refreshable { await load() }
@@ -58,7 +58,7 @@ struct BudgetsView: View {
         return VStack(alignment: .leading, spacing: 10) {
             Text("All budgets").font(.headline)
             HStack(alignment: .firstTextBaseline) {
-                MoneyText(cents: spent, currency: app.currency, tone: .neutral).font(.title2.weight(.semibold))
+                MoneyText(cents: spent, currency: app.currency, tone: .neutral).font(.title2.weight(.semibold)).fontDesign(.serif)
                 Text("spent of \(Money.format(amount, currency: app.currency))").foregroundStyle(.secondary)
                 Spacer()
                 LeftOrOver(remainingCents: amount - spent, currency: app.currency)

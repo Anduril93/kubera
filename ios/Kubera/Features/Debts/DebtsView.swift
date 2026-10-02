@@ -16,7 +16,7 @@ struct DebtsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Total debt").font(.subheadline).foregroundStyle(.secondary)
                         MoneyText(cents: total, currency: app.currency, tone: .expense(total))
-                            .font(.largeTitle.weight(.semibold))
+                            .heroAmount()
                         Text("Shown here for tracking. Net worth counts debt only through linked account balances, never twice.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -45,7 +45,7 @@ struct DebtsView: View {
         .overlay { if !loaded { ProgressView() } }
         .emptyState(when: loaded && debts.isEmpty, "No debts tracked", systemImage: "building.columns",
                     description: "Track credit cards, loans and mortgages — link an account to follow its balance, or maintain the balance manually. See a payoff estimate for each.") {
-            Button("Add debt", systemImage: "plus") { showingAdd = true }.buttonStyle(.borderedProminent)
+            Button("Add debt", systemImage: "plus") { showingAdd = true }.goldProminent()
         }
         .task(id: app.dataVersion) { await load() }
         .refreshable { await load() }

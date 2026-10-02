@@ -27,14 +27,25 @@ extension Color {
         })
     }
 
-    /// emerald-600 / emerald-500
-    static let positive = adaptive(light: 0x059669, dark: 0x10B981)
-    /// red-600 / red-500
-    static let negative = adaptive(light: 0xDC2626, dark: 0xEF4444)
-    /// amber-500 (fills)
-    static let warning = Color(red: 0xF5 / 255, green: 0x9E / 255, blue: 0x0B / 255)
-    /// amber-700 / amber-400 (text on a tinted badge)
-    static let warningText = adaptive(light: 0xB45309, dark: 0xFBBF24)
+    // Gilded theme (always dark): black surfaces, gold accent, cream text.
+    // Money colors are softened so they sit beside the gold without clashing,
+    // and warnings lean orange so they never read as the brand gold.
+
+    /// Brand gold (also the asset-catalog AccentColor).
+    static let gold = Color(red: 0xE3 / 255, green: 0xBC / 255, blue: 0x5E / 255)
+    /// Text/icons on a gold fill.
+    static let onGold = Color(red: 0x14 / 255, green: 0x11 / 255, blue: 0x0A / 255)
+    /// Hairline rings around cards.
+    static let goldLine = Color(red: 0xE3 / 255, green: 0xBC / 255, blue: 0x5E / 255).opacity(0.28)
+    /// Primary text.
+    static let cream = Color(red: 0xF4 / 255, green: 0xEB / 255, blue: 0xD6 / 255)
+
+    static let positive = adaptive(light: 0x2E7D52, dark: 0x5FBF8A)
+    static let negative = adaptive(light: 0xB23B2E, dark: 0xE26D5C)
+    /// Burnt orange (fills)
+    static let warning = Color(red: 0xE8 / 255, green: 0x86 / 255, blue: 0x3A / 255)
+    /// Text on a tinted warning badge
+    static let warningText = adaptive(light: 0xB45309, dark: 0xF2A65A)
 }
 
 // MARK: - Money
@@ -72,10 +83,10 @@ struct MoneyText: View {
 
     private var toneColor: Color {
         switch tone {
-        case .auto: cents < 0 ? .negative : .primary
+        case .auto: cents < 0 ? .negative : .cream
         case .liability: .negative
-        case .signed: cents < 0 ? .negative : (cents > 0 ? .positive : .primary)
-        case .neutral: .primary
+        case .signed: cents < 0 ? .negative : (cents > 0 ? .positive : .cream)
+        case .neutral: .cream
         }
     }
 }
@@ -134,7 +145,7 @@ struct Pill: View {
         case .warning: .warningText
         case .danger: .negative
         case .success: .positive
-        case .strong: Color(.systemBackground)
+        case .strong: .onGold
         }
     }
 
@@ -145,7 +156,7 @@ struct Pill: View {
         case .warning: Color.warning.opacity(0.15)
         case .danger: Color.negative.opacity(0.15)
         case .success: Color.positive.opacity(0.15)
-        case .strong: .primary
+        case .strong: .gold
         }
     }
 }
@@ -308,6 +319,7 @@ struct Card<Content: View, Trailing: View>: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(Color.goldLine, lineWidth: 0.5))
     }
 }
 
@@ -344,5 +356,19 @@ extension View {
                     }
                 }
             }
+    }
+}
+
+// MARK: - Gilded styling helpers
+
+extension View {
+    /// The one filled call-to-action style: gold capsule, near-black label.
+    func goldProminent() -> some View {
+        buttonStyle(.borderedProminent).foregroundStyle(Color.onGold)
+    }
+
+    /// Hero amounts (net worth, balances) use the logo's serif.
+    func heroAmount() -> some View {
+        font(.largeTitle.weight(.semibold)).fontDesign(.serif)
     }
 }

@@ -73,7 +73,7 @@ struct TransactionsView: View {
                         Button("Clear filters") { clearFilters() }
                     } else if !app.accounts.isEmpty {
                         Button("Add transaction", systemImage: "plus") { form = .create() }
-                            .buttonStyle(.borderedProminent)
+                            .goldProminent()
                     }
                 }
             }

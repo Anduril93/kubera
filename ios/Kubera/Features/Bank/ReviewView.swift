@@ -149,9 +149,9 @@ private struct ReviewRow: View {
                 Spacer()
                 Button(action: onConfirm) {
                     Label("Looks good", systemImage: "checkmark")
-                        .foregroundStyle(Color(.systemBackground))
+                        .foregroundStyle(Color.onGold)
                 }
-                .buttonStyle(.borderedProminent)
+                .goldProminent()
                 .controlSize(.small)
             }
         }

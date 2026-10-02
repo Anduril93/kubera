@@ -19,7 +19,7 @@ struct AccountsView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Net position").font(.subheadline).foregroundStyle(.secondary)
                             MoneyText(cents: net.netCents, currency: app.currency, tone: .signed)
-                                .font(.largeTitle.weight(.semibold))
+                                .heroAmount()
                         }
                         Divider()
                         HStack {
@@ -83,7 +83,7 @@ struct AccountsView: View {
                     description: "Add your checking, savings, credit cards and more to track balances and your net position.") {
             VStack(spacing: 10) {
                 Button("Link a bank", systemImage: "building.columns") { linker.start(app: app) }
-                    .buttonStyle(.borderedProminent)
+                    .goldProminent()
                 Button("Add a manual account", systemImage: "square.and.pencil") { showingAdd = true }
             }
             .disabled(linker.isWorking)

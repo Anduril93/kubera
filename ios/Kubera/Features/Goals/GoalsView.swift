@@ -33,7 +33,7 @@ struct GoalsView: View {
         .overlay { if !loaded { ProgressView() } }
         .emptyState(when: loaded && goals.isEmpty, "No savings goals yet", systemImage: "target",
                     description: "Set a target to save toward — track it manually, or link an account so progress follows its balance.") {
-            Button("New goal", systemImage: "plus") { showingAdd = true }.buttonStyle(.borderedProminent)
+            Button("New goal", systemImage: "plus") { showingAdd = true }.goldProminent()
         }
         .task(id: app.dataVersion) { await load() }
         .refreshable { await load() }
